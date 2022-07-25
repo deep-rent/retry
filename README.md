@@ -1,5 +1,7 @@
 # deep-rent/retry
 
+![Logo](https://raw.githubusercontent.com/deep-rent/retry/master/logo.png)
+
 This library provides a retry mechanism for Go based on highly configurable backoff strategies. Unlike similar libraries, the retry mechanism is initiated through a reusable struct type, which allows for easy mocking and sharing of backoff configuration.
 
 [![Test Status](https://github.com/deep-rent/retry/actions/workflows/test.yml/badge.svg)](https://github.com/deep-rent/retry/actions/workflows/test.yml) [![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/deep-rent/retry) [![Code Quality](https://goreportcard.com/badge/github.com/nanomsg/mangos)](https://goreportcard.com/report/github.com/deep-rent/retry)
