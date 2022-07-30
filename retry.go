@@ -61,6 +61,21 @@ func random() float64 {
 	return rd.Float64()
 }
 
+// An ExitError signals that an AttemptFunc should no longer be retried. Use
+// ForceExit to wrap an error such that it forces the current retry cycle to
+// exit. This is useful when an error is encountered that the program cannot
+// possibly recover from by retrying.
+type ExitError struct {
+	Cause error
+}
+
+func (e *ExitError) Error() string { return e.Cause.Error() }
+
+// ForceExit wraps err in an ExitError.
+func ForceExit(err error) error {
+	return &ExitError{Cause: err}
+}
+
 // A Cycler is used to schedule retry cycles in which an AttemptFunc is
 // repeatedly executed until it succeeds. Once configured, the same Cycler can
 // be used to schedule any number of retry cycles.
@@ -123,10 +138,10 @@ func (c *Cycler) Try(attempt AttemptFunc) error {
 
 // TryWithContext schedules a retry cycle in which attempt is repeatedly
 // executed until it returns nil. The cycle stops early if some backoff limit is
-// exceeded, or if ctx is cancelled. When an invocation of attempt returns nil
-// before the cycle stops, this method also returns nil. Otherwise, this
-// method returns the last error returned by attempt. If ctx contains an
-// error, this error will be returned instead.
+// exceeded, ctx is cancelled, or an ExitError occurs. When an invocation of
+// attempt returns nil before the cycle stops, this method also returns nil.
+// Otherwise, this method returns the last error returned by attempt. If ctx
+// contains an error, this error will be returned instead.
 //
 // In any case, attempt is guaranteed to be executed at least once. Be aware
 // that retry cycles with neither Limit nor Timeout set will run forever if
@@ -154,6 +169,11 @@ func (c *Cycler) TryWithContext(
 		if err == nil {
 			// success
 			return nil
+		}
+
+		// unrecoverable error
+		if e, ok := err.(*ExitError); ok {
+			return e.Cause
 		}
 
 		delay := c.strategy.Delay(n, start)

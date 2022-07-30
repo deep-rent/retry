@@ -114,6 +114,31 @@ func TestCycler_OnError(t *testing.T) {
 	}
 }
 
+func TestCycler_TryExitError(t *testing.T) {
+	cycler := retry.NewCycler(backoff.Constant(1 * time.Millisecond))
+
+	const N = 3
+	err := cycler.Try(func(n int) error {
+		switch {
+		case n < N:
+			return ErrTest
+		case n > N:
+			t.Fatalf("too many attempts: n > %d", N)
+			return nil
+		default:
+			return retry.ForceExit(ErrTest)
+		}
+	})
+
+	if err == nil {
+		t.Fatalf("expected an error, got nil")
+	}
+
+	if err != ErrTest {
+		t.Errorf("unexpected error: %#v", err)
+	}
+}
+
 // This example uses exponential backoff to retry a dummy function.
 func ExampleCycler() {
 	exp := backoff.Exponential(2*time.Millisecond, 2.0)
