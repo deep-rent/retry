@@ -26,7 +26,7 @@ import (
 
 ## Usage
 
-First, define a function to be retried. The signature must match `retry.Attempt`.
+First, define a function to be retried. The signature must match `retry.AttemptFunc`.
 
 ```go
 attempt := func(n int) error {
@@ -51,7 +51,7 @@ cycler.Timeout(10 * time.Minute) // time out after 10 minutes
 cycler.Jitter(0.5)               // introduce 50% random jitter
 ```
 
-Register a `retry.ErrorHandler` to catch intermediate errors.
+Register a `retry.ErrorHandlerFunc` to catch intermediate errors.
 
 ```go
 cycler.OnError(func(n int, delay time.Duration, err error) {
