@@ -69,6 +69,15 @@ if err != nil {
 }
 ```
 
+Another way to exit a retry cycle early is to flag the returned error using `ForceExit`.
+
+```go
+attempt := func(int) error {
+    // exit the retry cycle immediately
+    return retry.ForceExit(errors.New("unrecoverable")) 
+}
+```
+
 ## License
 
 Licensed under the Apache 2.0 License. For the full copyright and licensing information, please view the `LICENSE` file that was distributed with this source code.
