@@ -19,7 +19,8 @@ limitations under the License.
 //
 // The fundamental structure is called Cycler. A Cycler can be obtained by
 // passing an appropriate backoff Strategy to NewCycler. Any function whose
-// signature matches Attempt can then be retried using Try or TryWithContext.
+// signature matches AttemptFunc can then be retried using either Try or
+// TryWithContext.
 package retry
 
 import (
@@ -31,47 +32,47 @@ import (
 )
 
 type (
-	// An Attempt is a function that can be scheduled in a retry cycle. The
-	// function will be retried if it returns an error, while returning nil
-	// indicates successful completion. The argument n is the current attempt
-	// count, starting at n = 1.
-	Attempt func(n int) error
+	// An AttemptFunc can be scheduled in a retry Cycle. The function will be
+	// retried if it returns an error, while returning nil indicates successful
+	// completion. The argument n is the current attempt count, starting at
+	// n = 1.
+	AttemptFunc func(n int) error
 
-	// An ErrorHandler is invoked when the n-th execution of an Attempt failed
-	// with err, and the next retry is pending after the delay has passed. Note
-	// that the initial execution corresponds to n = 1.
-	ErrorHandler func(n int, delay time.Duration, err error)
+	// An ErrorHandlerFunc is invoked when the n-th execution of an AttemptFunc
+	// failed with err, and the next retry is pending after delay has passed.
+	// Note that the initial execution corresponds to n = 1.
+	ErrorHandlerFunc func(n int, delay time.Duration, err error)
 )
 
 var rd *rand.Rand
 
 func init() {
-	// seed a new random number generator
+	// seed a new pseudo-random number generator
 	rd = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 }
 
-// Default implementation of backoff.Clock
+// now is the default implementation of backoff.Clock.
 func now() time.Time {
 	return time.Now()
 }
 
-// Default implementation of backoff.Random
+// random is the default implementation of backoff.Random.
 func random() float64 {
 	return rd.Float64()
 }
 
-// A Cycler is used to schedule retry cycles in which an Attempt function is
-// repeatedly executed until it succeeds. The same Cycler can be used to
-// schedule any number of retry cycles.
+// A Cycler is used to schedule retry cycles in which an AttemptFunc is
+// repeatedly executed until it succeeds. Once configured, the same Cycler can
+// be used to schedule any number of retry cycles.
 type Cycler struct {
 	strategy backoff.Strategy
-	handlers []ErrorHandler
+	handlers []ErrorHandlerFunc
 	Now      backoff.Clock // used to track the execution time of retry cycles
 }
 
-// NewCycler creates a new retry Cycler. The specified backoff strategy
-// determines the delay between consecutive attempts. A Cycler is meant to be
-// reused. Recreating the same Cycler should be avoided.
+// NewCycler creates a new retry Cycler. The specified strategy determines the
+// backoff delay between consecutive attempts. A Cycler is meant to be reused.
+// Recreating the same Cycler should be avoided.
 func NewCycler(strategy backoff.Strategy) *Cycler {
 	return &Cycler{
 		strategy: strategy,
@@ -82,7 +83,7 @@ func NewCycler(strategy backoff.Strategy) *Cycler {
 // OnError registers a callback to be invoked when a failed Attempt needs to be
 // retried. Typically, these callbacks are used to log intermediate errors that
 // would otherwise remain unhandled.
-func (c *Cycler) OnError(handler ErrorHandler) {
+func (c *Cycler) OnError(handler ErrorHandlerFunc) {
 	c.handlers = append(c.handlers, handler)
 }
 
@@ -115,30 +116,25 @@ func (c *Cycler) Timeout(max time.Duration) {
 	c.strategy = backoff.Timeout(c.strategy, max, c.Now)
 }
 
-// TryWithContext schedules a retry cycle in which attempt is repeatedly
-// executed until it returns nil. The cycle stops early if some backoff limit is
-// exceeded. When an invocation of attempt returns nil before the cycle stops,
-// this function also returns nil. Otherwise, this function returns the last
-// error returned by attempt.
-//
-// In any case, attempt will be executed at least once. Be aware that retry
-// cycles with neither Limit nor Timeout set will run forever if attempt keeps
-// returning errors.
-func (c *Cycler) Try(attempt Attempt) error {
+// Try calls TryWithContext using context.Background.
+func (c *Cycler) Try(attempt AttemptFunc) error {
 	return c.TryWithContext(context.Background(), attempt)
 }
 
 // TryWithContext schedules a retry cycle in which attempt is repeatedly
 // executed until it returns nil. The cycle stops early if some backoff limit is
 // exceeded, or if ctx is cancelled. When an invocation of attempt returns nil
-// before the cycle stops, this function also returns nil. Otherwise, this
-// function returns the last error returned by attempt. If ctx contains an
+// before the cycle stops, this method also returns nil. Otherwise, this
+// method returns the last error returned by attempt. If ctx contains an
 // error, this error will be returned instead.
 //
-// In any case, attempt will be executed at least once. Be aware that retry
-// cycles with neither Limit nor Timeout set will run forever if attempt keeps
-// returning errors.
-func (c *Cycler) TryWithContext(ctx context.Context, attempt Attempt) error {
+// In any case, attempt is guaranteed to be executed at least once. Be aware
+// that retry cycles with neither Limit nor Timeout set will run forever if
+// attempt keeps failing.
+func (c *Cycler) TryWithContext(
+	ctx context.Context,
+	attempt AttemptFunc,
+) error {
 	var t *time.Timer
 	defer func() {
 		if t != nil {
