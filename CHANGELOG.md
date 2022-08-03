@@ -1,8 +1,8 @@
 # Changelog
 
-## v1.0.1 -> v2.0.0
+## v1.0.1 -> v1.1.0
 
-### Breaking changes:
+### Potentially breaking changes:
 
 1. `Attempt` was renamed to `AttemptFunc`.
 2. `ErrorHandler` was renamed to `ErrorHandlerFunc`.
