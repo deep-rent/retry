@@ -114,7 +114,7 @@ func TestCycler_OnError(t *testing.T) {
 	}
 }
 
-func TestCycler_TryExitError(t *testing.T) {
+func TestCycler_Try_ExitError(t *testing.T) {
 	cycler := retry.NewCycler(backoff.Constant(1 * time.Millisecond))
 
 	const N = 3
