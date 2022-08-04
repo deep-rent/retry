@@ -30,7 +30,7 @@ func (lim *limit) Delay(n int, start time.Time) time.Duration {
 	return lim.strategy.Delay(n, start)
 }
 
-// Limit wraps a backoff Strategy to end the retry cycle after n attempts. If
+// Limit wraps a backoff [Strategy] to end the retry cycle after n attempts. If
 // n < 1, no limit will be applied.
 func Limit(strategy Strategy, n int) Strategy {
 	if n < 1 {

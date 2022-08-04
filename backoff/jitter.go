@@ -39,8 +39,8 @@ func (j *jitter) Delay(n int, start time.Time) (delay time.Duration) {
 	return time.Duration(float64(delay) - w + (j.random() * (2*w + 1)))
 }
 
-// Jitter wraps a backoff Strategy to randomly spread produced delays around in
-// time. The spread factor determines the relative range in which delays are
+// Jitter wraps a backoff [Strategy] to randomly spread produced delays around
+// in time. The spread factor determines the relative range in which delays are
 // scattered. It must fall in the half-open interval [0,1). For example, a
 // spread of 0.5 results in delays ranging between 50% above and 50% below the
 // values produced by the wrapped strategy. If spread = 0, no jitter will be

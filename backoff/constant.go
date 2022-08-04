@@ -29,8 +29,8 @@ func (con *constant) Delay(n int, start time.Time) time.Duration {
 	return con.d
 }
 
-// Constant returns a backoff Strategy that always returns delay d. The function
-// panics if d < 0.
+// Constant returns a backoff [Strategy] that always returns delay d. The
+// function panics if d < 0.
 func Constant(d time.Duration) Strategy {
 	if d < 0 {
 		panic(fmt.Sprintf("d = %s, must be >= 0", d))
@@ -38,6 +38,6 @@ func Constant(d time.Duration) Strategy {
 	return &constant{d: d}
 }
 
-// Once is a backoff Strategy that always returns Exit. Mostly useful for
-// testing purposes.
+// Once is a backoff [Strategy] that always returns Exit, i.e. exits after the
+// first attempt. Mostly useful for testing purposes.
 var Once Strategy = &constant{Exit}

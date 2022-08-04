@@ -31,7 +31,7 @@ func (exp *exponential) Delay(n int, start time.Time) time.Duration {
 	return time.Duration(float64(exp.d) * math.Pow(exp.m, float64(n-1)))
 }
 
-// Exponential returns a backoff Strategy producing delays that exponentially
+// Exponential returns a backoff [Strategy] producing delays that exponentially
 // grow (m > 1), or shrink (m < 1) by the factor m, starting from the
 // specified initial delay d. The function panics if d or m are negative.
 func Exponential(d time.Duration, m float64) Strategy {

@@ -16,8 +16,10 @@ limitations under the License.
 
 // Package backoff provides various backoff strategies.
 //
-// In particular, the package implements Constant, Linear and Exponential
-// backoff strategies as well as some decorators to adjust their behavior.
+// In particular, the package implements [Constant], [Linear] and [Exponential]
+// backoff strategies as well as some decorators to adjust their behavior. These
+// include setting a [Timeout], a delay [Cap], an attempt [Limit], or adding
+// random [Jitter].
 package backoff
 
 import "time"
@@ -26,7 +28,8 @@ import "time"
 var Exit time.Duration = -1
 
 // Strategy determines the delay between consecutive retries in a backoff
-// scenario. Implementations of this interface must be stateless.
+// scenario. Implementations of this interface should be stateless because they
+// might be used in multiple concurrent goroutines.
 type Strategy interface {
 	// Delay returns the time to wait after the n-th retry of a failing function
 	// call. For implementing time-based algorithms, the function also takes the

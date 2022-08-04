@@ -34,7 +34,7 @@ func (lin *linear) Delay(n int, start time.Time) time.Duration {
 	return delay
 }
 
-// Linear returns a backoff Strategy producing delays that grow linearly in
+// Linear returns a backoff [Strategy] producing delays that grow linearly in
 // in steps of k, starting from the specified initial delay d. If k is negative,
 // the delay shrinks to 0 and then stops decreasing. The function panics if
 // d is negative.

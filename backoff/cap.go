@@ -33,7 +33,7 @@ func (c *cap) Delay(n int, start time.Time) time.Duration {
 	return delay
 }
 
-// Cap wraps a backoff Strategy to cap produced delays at the given maximum.
+// Cap wraps a backoff [Strategy] to cap produced delays at the given maximum.
 // If max <= 0, no limit will be applied.
 func Cap(strategy Strategy, max time.Duration) Strategy {
 	if max <= 0 {

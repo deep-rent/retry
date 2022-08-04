@@ -154,7 +154,7 @@ func ExampleCycler() {
 		fmt.Printf("attempt #%d: %v => wait %2d ms\n", n, err, ms)
 	})
 
-	const N = 5
+	const N = 5 // number of tries
 
 	// start retry cycle
 	err := cycler.Try(func(n int) error {
@@ -194,7 +194,7 @@ func ExampleCycler_Try() {
 		fmt.Printf("attempt #%d: %v => wait %2d ms\n", n, err, ms)
 	})
 
-	const N = 5
+	const N = 5 // number of tries
 
 	// start retry cycle
 	err := cycler.Try(func(n int) error {
@@ -234,7 +234,7 @@ func ExampleCycler_TryWithContext() {
 		fmt.Printf("attempt #%d: %v => wait %2d ms\n", n, err, ms)
 	})
 
-	const N = 5
+	const N = 5 // number of tries
 
 	// start retry cycle
 	err := cycler.TryWithContext(ctx, func(n int) error {

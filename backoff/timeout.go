@@ -34,9 +34,9 @@ func (t *timeout) Delay(n int, start time.Time) time.Duration {
 	return t.strategy.Delay(n, start)
 }
 
-// Timeout wraps a backoff Strategy to exit the retry cycle after the given
-// duration has passed. The elapsed time is measured relative to the specified
-// Clock. If max <= 0, no timeout will be applied.
+// Timeout wraps a backoff [Strategy] to exit the retry cycle after the given
+// duration has passed. The elapsed time is measured relative to the time
+// supplied by now. If max <= 0, no timeout will be applied.
 func Timeout(strategy Strategy, max time.Duration, now Clock) Strategy {
 	if max <= 0 {
 		return strategy
