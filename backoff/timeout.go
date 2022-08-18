@@ -18,17 +18,25 @@ package backoff
 
 import "time"
 
-// Clock returns the current time.
-type Clock func() time.Time
+// A Clock is used to determine the reference time in time-based logic.
+type Clock interface {
+	// Time returns the current time.
+	Time() time.Time
+}
+
+// A ClockFunc is the functional implementation of the [Clock] interface.
+type ClockFunc func() time.Time
+
+func (f ClockFunc) Time() time.Time { return f() }
 
 type timeout struct {
 	strategy Strategy      // wrapped strategy
-	max      time.Duration // maximum execution time
-	now      Clock         // reference time
+	clock    Clock         // determines the reference time
+	limit    time.Duration // maximum execution time
 }
 
 func (t *timeout) Delay(n int, start time.Time) time.Duration {
-	if t.now().Sub(start) >= t.max {
+	if t.clock.Time().Sub(start) >= t.limit {
 		return Exit
 	}
 	return t.strategy.Delay(n, start)
@@ -36,14 +44,14 @@ func (t *timeout) Delay(n int, start time.Time) time.Duration {
 
 // Timeout wraps a backoff [Strategy] to exit the retry cycle after the given
 // duration has passed. The elapsed time is measured relative to the time
-// supplied by now. If max <= 0, no timeout will be applied.
-func Timeout(strategy Strategy, max time.Duration, now Clock) Strategy {
-	if max <= 0 {
+// supplied by clock. If limit <= 0, no timeout will be applied.
+func Timeout(strategy Strategy, limit time.Duration, clock Clock) Strategy {
+	if limit <= 0 {
 		return strategy
 	}
 	return &timeout{
 		strategy: strategy,
-		max:      max,
-		now:      now,
+		limit:    limit,
+		clock:    clock,
 	}
 }

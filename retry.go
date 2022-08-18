@@ -44,11 +44,6 @@ type (
 	ErrorHandlerFunc func(n int, delay time.Duration, err error)
 )
 
-// now is the default implementation of [backoff.Clock].
-func now() time.Time {
-	return time.Now()
-}
-
 // seed a new pseudo-random number generator
 var rd *rand.Rand = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
@@ -72,13 +67,18 @@ func ForceExit(err error) error {
 	return &ExitError{Cause: err}
 }
 
+// now is the default implementation of [backoff.Clock].
+var now backoff.Clock = backoff.ClockFunc(func() time.Time {
+	return time.Now()
+})
+
 // A Cycler is used to schedule retry cycles in which an [AttemptFunc] is
 // repeatedly executed until it succeeds. Once configured, the same cycler can
 // be used to schedule any number of retry cycles.
 type Cycler struct {
 	strategy backoff.Strategy
 	handlers []ErrorHandlerFunc
-	Now      backoff.Clock // used to track the execution time of retry cycles
+	Clock    backoff.Clock // used to track the execution time of retry cycles
 }
 
 // NewCycler creates a new retry [Cycler]. The specified [backoff.Strategy]
@@ -87,7 +87,7 @@ type Cycler struct {
 func NewCycler(strategy backoff.Strategy) *Cycler {
 	return &Cycler{
 		strategy: strategy,
-		Now:      now,
+		Clock:    now,
 	}
 }
 
@@ -122,9 +122,9 @@ func (c *Cycler) Limit(n int) {
 
 // Timeout sets the maximum duration of retry cycles. A retry cycle will stop
 // after the time elapsed since it was scheduled goes past the maximum. If
-// max <= 0, no timeout will be applied.
-func (c *Cycler) Timeout(max time.Duration) {
-	c.strategy = backoff.Timeout(c.strategy, max, c.Now)
+// limit <= 0, no timeout will be applied.
+func (c *Cycler) Timeout(limit time.Duration) {
+	c.strategy = backoff.Timeout(c.strategy, limit, c.Clock)
 }
 
 // Try calls [TryWithContext] using [context.Background].
@@ -157,8 +157,8 @@ func (c *Cycler) TryWithContext(
 		}
 	}()
 
-	n := 0           // number of attempts
-	start := c.Now() // current time
+	n := 0                  // number of attempts
+	start := c.Clock.Time() // current time
 
 	// retry loop
 	for {

@@ -24,7 +24,7 @@ import (
 )
 
 func clock(now time.Time) backoff.Clock {
-	return func() time.Time { return now }
+	return backoff.ClockFunc(func() time.Time { return now })
 }
 
 func TestTimeoutBelow(t *testing.T) {
